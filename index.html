@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>streaming ecom · painel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%235e6ad2'/%3E%3Cpath d='M9.5 7.5v9l7-4.5z' fill='%23f7f8f8'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5/600.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#08090a;--bg1:#0f1011;--bg2:#191a1b;--bg3:#28282c;
+  --t1:#f7f8f8;--t2:#d0d6e0;--t3:#8a8f98;--t4:#62666d;
+  --in:#5e6ad2;--in2:#7170ff;--in3:#828fff;
+  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.08);
+  --ok:#4cb782;--warn:#f2994a;--err:#e5484d;
+}
+html,body{background:var(--bg0);color:var(--t2);font-family:Inter,system-ui,sans-serif;font-feature-settings:'cv01','ss03';font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{color:var(--t1);font-weight:590;text-wrap:balance}
+h1{font-size:24px;letter-spacing:-.24px}
+h2{font-size:20px;letter-spacing:-.24px}
+.muted{color:var(--t3)} .faint{color:var(--t4)} .small{font-size:13px} .xs{font-size:11px}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace}
+.hidden{display:none!important}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--b2);background:rgba(255,255,255,.05);color:var(--t2);font-size:13px;font-weight:510;cursor:pointer;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.08)}
+.btn:focus-visible,.input:focus,.select:focus{outline:none;border-color:var(--in)}
+.btn.primary{background:var(--in);border-color:var(--in2);color:var(--t1)}
+.btn.primary:hover{background:var(--in2)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:rgba(255,255,255,.04)}
+.btn.danger{background:rgba(229,72,77,.1);border-color:rgba(229,72,77,.3);color:var(--err)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:default}
+.input,.select{width:100%;height:40px;padding:0 12px;background:var(--bg1);border:1px solid var(--b2);border-radius:8px;color:var(--t1);font-size:15px}
+.input::placeholder{color:var(--t4)}
+label.f{display:block;margin-bottom:16px}
+label.f span{display:block;font-size:11px;font-weight:510;color:var(--t3);margin-bottom:8px;letter-spacing:.02em}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* auth */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--bg1);border:1px solid var(--b2);border-radius:12px}
+.auth .card{width:100%;max-width:400px;padding:32px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--in);display:flex;align-items:center;justify-content:center}
+.logo svg{width:18px;height:18px;fill:var(--t1)}
+.alert{padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px;border:1px solid}
+.alert.err{background:rgba(229,72,77,.1);border-color:rgba(229,72,77,.3);color:var(--err)}
+.alert.ok{background:rgba(76,183,130,.1);border-color:rgba(76,183,130,.3);color:var(--ok)}
+
+/* app shell */
+.shell{display:flex;min-height:100vh}
+.side{width:240px;flex:none;background:var(--bg1);border-right:1px solid var(--b1);padding:16px 8px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
+.brand .logo{width:28px;height:28px;border-radius:7px}
+.brand .logo svg{width:13px;height:13px}
+.brand b{color:var(--t1);font-weight:590;font-size:15px}
+.nav a{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;color:var(--t3);font-size:13px;font-weight:510;text-decoration:none;cursor:pointer}
+.nav a:hover{background:rgba(255,255,255,.03);color:var(--t2)}
+.nav a.on{background:var(--bg2);color:var(--t1);border:1px solid var(--b2)}
+.me{margin-top:auto;padding:12px 10px;border-top:1px solid var(--b1)}
+.main{flex:1;min-width:0;padding:32px;max-width:1200px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{padding:16px}
+.kpi .v{font-size:32px;font-weight:590;color:var(--t1);letter-spacing:-.704px;line-height:1.2;margin-top:4px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.bar .input{max-width:320px;height:36px;font-size:13px}
+.search{position:relative;flex:1;max-width:320px}
+.search svg{position:absolute;left:12px;top:10px;color:var(--t4)}
+.search .input{padding-left:36px;max-width:none}
+
+/* tabela */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-weight:510;color:var(--t3);font-size:11px;letter-spacing:.02em;padding:10px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--b1)}
+.tbl td{padding:12px 16px;border-bottom:1px solid var(--b1);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover{background:rgba(255,255,255,.02)}
+.tbl td.act{text-align:right;white-space:nowrap}
+.tbl .t1{color:var(--t1);font-weight:510}
+.tblwrap{overflow-x:auto}
+.badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:510;border:1px solid var(--b2);color:var(--t3)}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.ok{color:var(--ok);border-color:rgba(76,183,130,.3)}
+.badge.warn{color:var(--warn);border-color:rgba(242,153,74,.3)}
+.badge.err{color:var(--err);border-color:rgba(229,72,77,.3)}
+.badge.idle{color:var(--t3)}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;background:var(--bg2);border:1px solid var(--b2);font-size:11px;color:var(--t3)}
+.empty{padding:48px 24px;text-align:center}
+.empty svg{width:32px;height:32px;color:var(--t4);margin-bottom:12px}
+.empty h3{font-size:15px;margin-bottom:4px}
+
+/* modal (sem animacao) */
+.overlay{position:fixed;inset:0;background:rgba(8,9,10,.8);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;overflow-y:auto;z-index:10}
+.modal{width:100%;max-width:520px;padding:24px}
+.modal h2{margin-bottom:4px}
+.modal .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.seg{display:flex;gap:4px;padding:4px;background:var(--bg0);border:1px solid var(--b2);border-radius:8px;margin-bottom:16px}
+.seg button{flex:1;height:32px;border:0;border-radius:6px;background:transparent;color:var(--t3);font-size:13px;font-weight:510;cursor:pointer}
+.seg button.on{background:var(--bg3);color:var(--t1)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.toast{position:fixed;right:24px;bottom:24px;background:var(--bg1);border:1px solid var(--b2);border-left:3px solid var(--ok);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--t1);z-index:20;max-width:360px}
+.toast.err{border-left-color:var(--err)}
+.hint{padding:12px 16px;border-radius:8px;background:rgba(94,106,210,.08);border:1px solid rgba(94,106,210,.25);font-size:13px;color:var(--t2);margin-bottom:16px}
+.skel{height:44px;background:rgba(255,255,255,.04);border-radius:6px;margin:8px 16px}
+
+@media (max-width:860px){
+  .shell{flex-direction:column}
+  .side{width:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:8px;border-right:0;border-bottom:1px solid var(--b1);overflow-x:auto}
+  .brand{padding:0 8px}
+  .brand b{display:none}
+  .nav{display:flex;gap:4px}
+  .me{margin:0 0 0 auto;border:0;padding:0 8px;white-space:nowrap}
+  .me .who{display:none}
+  .main{padding:16px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .row2{grid-template-columns:1fr}
+  .tbl .hide-m{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ======= login / primeiro acesso ======= -->
+<div id="auth" class="auth hidden">
+  <div class="card">
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+    <h1 style="margin-top:24px">streaming ecom</h1>
+    <p class="muted small" id="authSub" style="margin:4px 0 24px">painel de aparelhos e listas</p>
+    <div id="authMsg"></div>
+    <form id="authForm">
+      <label class="f hidden" id="fName"><span>seu nome</span><input class="input" name="name" autocomplete="name"></label>
+      <label class="f"><span>email</span><input class="input" name="email" type="email" autocomplete="email" required></label>
+      <label class="f"><span>senha</span><input class="input" name="password" type="password" autocomplete="current-password" required minlength="6"></label>
+      <button class="btn primary" style="width:100%;justify-content:center;height:44px;font-size:15px" id="authBtn">entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ======= app ======= -->
+<div id="app" class="shell hidden">
+  <aside class="side">
+    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></div><b>streaming ecom</b></div>
+    <nav class="nav">
+      <a data-view="devices" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 21h6"/></svg>aparelhos</a>
+      <a data-view="servers"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>servidores</a>
+      <a data-view="resellers" id="navResellers" class="hidden"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.8 3.5 6"/></svg>revendedores</a>
+    </nav>
+    <div class="me">
+      <div class="who small t1" id="meName" style="color:var(--t1)"></div>
+      <div class="who xs faint" id="meRole" style="margin-bottom:8px"></div>
+      <button class="btn ghost sm" id="logout"><svg class="i" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg>sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- aparelhos -->
+    <section id="v-devices">
+      <div class="head">
+        <div><h1>aparelhos</h1><p class="muted small">vincule o código que aparece na tela do app e defina a lista do cliente</p></div>
+        <button class="btn primary" id="addDevice"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>adicionar aparelho</button>
+      </div>
+      <div class="kpis">
+        <div class="card kpi"><div class="xs muted">total</div><div class="v" id="kTotal">0</div></div>
+        <div class="card kpi"><div class="xs muted">ativos</div><div class="v" id="kOk">0</div></div>
+        <div class="card kpi"><div class="xs muted">vencem em 7 dias</div><div class="v" id="kSoon">0</div></div>
+        <div class="card kpi"><div class="xs muted">vencidos / bloqueados</div><div class="v" id="kBad">0</div></div>
+      </div>
+      <div class="bar">
+        <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input class="input" id="qDevices" placeholder="buscar por código ou cliente"></div>
+        <select class="select" id="fStatus" style="width:auto;height:36px;font-size:13px">
+          <option value="">todos os status</option><option value="ok">ativos</option><option value="soon">vencendo</option>
+          <option value="expired">vencidos</option><option value="blocked">bloqueados</option><option value="nolist">sem lista</option>
+        </select>
+      </div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>código</th><th>cliente</th><th class="hide-m">lista</th><th>validade</th><th>status</th><th class="hide-m col-res">revendedor</th><th class="hide-m">último acesso</th><th></th></tr></thead>
+        <tbody id="tDevices"></tbody>
+      </table></div>
+    </section>
+
+    <!-- servidores -->
+    <section id="v-servers" class="hidden">
+      <div class="head">
+        <div><h1>servidores</h1><p class="muted small">endereços (DNS) usados quando o cliente entra com usuário e senha</p></div>
+        <button class="btn primary" id="addServer"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>adicionar servidor</button>
+      </div>
+      <div class="hint">no login por usuário e senha o app testa os servidores ativos, um por um, até achar onde o login existe.</div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>nome</th><th>endereço</th><th class="hide-m col-res">dono</th><th>status</th><th></th></tr></thead>
+        <tbody id="tServers"></tbody>
+      </table></div>
+    </section>
+
+    <!-- revendedores -->
+    <section id="v-resellers" class="hidden">
+      <div class="head">
+        <div><h1>revendedores</h1><p class="muted small">cada revendedor gerencia só os aparelhos e servidores dele</p></div>
+        <button class="btn primary" id="addReseller"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>novo revendedor</button>
+      </div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>nome</th><th class="hide-m">email</th><th>aparelhos</th><th>status</th><th></th></tr></thead>
+        <tbody id="tResellers"></tbody>
+      </table></div>
+    </section>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://mtfshjqplejitaviglne.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_4itD0Hk5ZZ87Np_leX8v9Q_eHGsWWAG';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtCode = c => c ? c.slice(0,4) + '-' + c.slice(4) : '';
+const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+const ago = d => {
+  if (!d) return 'nunca';
+  const m = Math.floor((Date.now() - new Date(d)) / 60000);
+  if (m < 2) return 'agora';
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60); if (h < 24) return h + ' h';
+  return Math.floor(h / 24) + ' d';
+};
+
+let me = null, devices = [], servers = [], resellers = [], view = 'devices';
+
+function toast(msg, err = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.textContent = msg;
+  $('#toastRoot').replaceChildren(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+async function fn(action, payload = {}) {
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(SUPABASE_URL + '/functions/v1/se-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + (session?.access_token ?? SUPABASE_KEY) },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.error) throw new Error(j.error || 'erro ' + r.status);
+  return j;
+}
+
+/* ================= auth ================= */
+let bootstrapMode = false;
+async function showAuth(msg) {
+  $('#app').classList.add('hidden');
+  $('#auth').classList.remove('hidden');
+  $('#authMsg').innerHTML = msg ? `<div class="alert err">${esc(msg)}</div>` : '';
+  try { bootstrapMode = !(await fn('status')).has_owner; } catch { bootstrapMode = false; }
+  $('#fName').classList.toggle('hidden', !bootstrapMode);
+  $('#authSub').textContent = bootstrapMode ? 'primeiro acesso: crie a conta do dono do painel' : 'painel de aparelhos e listas';
+  $('#authBtn').textContent = bootstrapMode ? 'criar conta do dono' : 'entrar';
+}
+
+$('#authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(e.target), btn = $('#authBtn');
+  const email = f.get('email').trim(), password = f.get('password');
+  btn.disabled = true; $('#authMsg').innerHTML = '';
+  try {
+    if (bootstrapMode) await fn('bootstrap', { email, password, name: f.get('name') });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message === 'Invalid login credentials' ? 'email ou senha incorretos' : error.message);
+    await boot();
+  } catch (err) {
+    $('#authMsg').innerHTML = `<div class="alert err">${esc(err.message)}</div>`;
+  } finally { btn.disabled = false; }
+});
+
+$('#logout').onclick = async () => { await sb.auth.signOut(); me = null; showAuth(); };
+
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return showAuth();
+  const { data: p } = await sb.from('se_profiles').select('*').eq('id', session.user.id).maybeSingle();
+  if (!p || !p.active) { await sb.auth.signOut(); return showAuth('esta conta não tem acesso ao painel ou está bloqueada'); }
+  me = p;
+  $('#auth').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  $('#meName').textContent = p.name || p.email;
+  $('#meRole').textContent = p.role === 'owner' ? 'dono' : 'revendedor';
+  $('#navResellers').classList.toggle('hidden', p.role !== 'owner');
+  document.querySelectorAll('.col-res').forEach(el => el.classList.toggle('hidden', p.role !== 'owner'));
+  await reload();
+}
+
+/* ================= navegação ================= */
+document.querySelectorAll('.nav a').forEach(a => a.onclick = () => go(a.dataset.view));
+function go(v) {
+  view = v;
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.view === v));
+  ['devices', 'servers', 'resellers'].forEach(x => $('#v-' + x).classList.toggle('hidden', x !== v));
+}
+
+async function reload() {
+  $('#tDevices').innerHTML = '<tr><td colspan="8"><div class="skel"></div><div class="skel"></div></td></tr>';
+  const [d, s, r] = await Promise.all([
+    sb.from('se_devices').select('*').not('reseller_id', 'is', null).order('created_at', { ascending: false }),
+    sb.from('se_servers').select('*').order('created_at'),
+    me.role === 'owner' ? sb.from('se_profiles').select('*').order('created_at') : Promise.resolve({ data: [me] }),
+  ]);
+  devices = d.data || []; servers = s.data || []; resellers = r.data || [];
+  renderDevices(); renderServers(); renderResellers();
+}
+const nameOf = id => { const p = resellers.find(x => x.id === id); return p ? (p.name || p.email) : '—'; };
+
+/* ================= aparelhos ================= */
+function devStatus(d) {
+  if (!d.source_type) return ['nolist', 'sem lista', 'idle'];
+  if (!d.active) return ['blocked', 'bloqueado', 'err'];
+  if (d.expires_at && new Date(d.expires_at) < new Date()) return ['expired', 'vencido', 'err'];
+  if (d.expires_at && new Date(d.expires_at) - new Date() < 7 * 864e5) return ['soon', 'vence logo', 'warn'];
+  return ['ok', 'ativo', 'ok'];
+}
+
+function renderDevices() {
+  const st = devices.map(devStatus);
+  $('#kTotal').textContent = devices.length;
+  $('#kOk').textContent = st.filter(s => s[0] === 'ok' || s[0] === 'soon').length;
+  $('#kSoon').textContent = st.filter(s => s[0] === 'soon').length;
+  $('#kBad').textContent = st.filter(s => s[0] === 'expired' || s[0] === 'blocked').length;
+
+  const q = $('#qDevices').value.trim().toLowerCase().replace(/-/g, '');
+  const fs = $('#fStatus').value;
+  const rows = devices.filter((d, i) =>
+    (!q || d.code.toLowerCase().includes(q) || (d.client_name || '').toLowerCase().includes(q)) &&
+    (!fs || st[i][0] === fs));
+
+  if (!devices.length) {
+    $('#tDevices').innerHTML = `<tr><td colspan="8"><div class="empty">
+      <svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 21h6"/></svg>
+      <h3>nenhum aparelho ainda</h3><p class="muted small" style="margin-bottom:16px">abra o app na tv ou no celular, escolha "código do aparelho" e cadastre o código aqui</p>
+      <button class="btn primary" onclick="document.getElementById('addDevice').click()">adicionar aparelho</button></div></td></tr>`;
+    return;
+  }
+  if (!rows.length) { $('#tDevices').innerHTML = '<tr><td colspan="8" class="empty muted small">nada encontrado</td></tr>'; return; }
+  const owner = me.role === 'owner';
+  $('#tDevices').innerHTML = rows.map(d => {
+    const [, label, cls] = devStatus(d);
+    const src = d.source_type === 'm3u' ? '<span class="tag">m3u</span>' : d.source_type === 'xtream' ? `<span class="tag">xtream</span> <span class="faint">${esc(d.xtream_user)}</span>` : '<span class="faint">—</span>';
+    return `<tr>
+      <td class="mono t1">${fmtCode(d.code)}</td>
+      <td>${esc(d.client_name) || '<span class="faint">sem nome</span>'}</td>
+      <td class="hide-m">${src}</td>
+      <td>${fmtDate(d.expires_at)}</td>
+      <td><span class="badge ${cls}">${label}</span></td>
+      <td class="hide-m col-res ${owner ? '' : 'hidden'}">${esc(nameOf(d.reseller_id))}</td>
+      <td class="hide-m muted">${ago(d.last_seen)}</td>
+      <td class="act">
+        <button class="btn sm" data-edit="${d.id}">editar</button>
+        <button class="btn sm ghost" data-toggle="${d.id}">${d.active ? 'bloquear' : 'liberar'}</button>
+      </td></tr>`;
+  }).join('');
+}
+$('#qDevices').oninput = renderDevices;
+$('#fStatus').onchange = renderDevices;
+$('#tDevices').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.edit) deviceModal(devices.find(d => d.id === b.dataset.edit));
+  if (b.dataset.toggle) {
+    const d = devices.find(x => x.id === b.dataset.toggle);
+    const { error } = await sb.from('se_devices').update({ active: !d.active }).eq('id', d.id);
+    if (error) return toast(error.message, true);
+    toast(d.active ? 'aparelho bloqueado' : 'aparelho liberado'); reload();
+  }
+});
+$('#addDevice').onclick = () => deviceModal(null);
+
+function modal(html) {
+  $('#modalRoot').innerHTML = `<div class="overlay"><div class="card modal">${html}</div></div>`;
+  const ov = $('#modalRoot .overlay');
+  ov.addEventListener('mousedown', e => { if (e.target === ov) closeModal(); });
+  ov.querySelectorAll('[data-close]').forEach(b => b.onclick = closeModal);
+  return ov;
+}
+const closeModal = () => $('#modalRoot').innerHTML = '';
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+
+function deviceModal(d) {
+  const isNew = !d;
+  let type = d?.source_type || 'xtream';
+  const serverOpts = servers.filter(s => s.active).map(s => `<option value="${esc(s.url)}">${esc(s.name)} · ${esc(s.url)}</option>`).join('');
+  const ov = modal(`
+    <h2>${isNew ? 'adicionar aparelho' : 'editar aparelho'}</h2>
+    <p class="muted small" style="margin-bottom:24px">${isNew ? 'digite o código que aparece na tela do app' : 'código ' + fmtCode(d.code)}</p>
+    <div id="mErr"></div>
+    <form id="mForm">
+      ${isNew ? `<label class="f"><span>código do aparelho</span><input class="input mono" name="code" placeholder="XXXX-XXXX" maxlength="9" required autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em"></label>` : ''}
+      <label class="f"><span>nome do cliente</span><input class="input" name="client_name" value="${esc(d?.client_name)}" placeholder="ex: joão · sala"></label>
+      <span class="xs muted" style="display:block;margin-bottom:8px;font-weight:510">tipo de lista</span>
+      <div class="seg"><button type="button" data-t="xtream">login xtream</button><button type="button" data-t="m3u">link m3u</button></div>
+      <div id="tX">
+        <label class="f"><span>servidor (dns)</span>
+          ${serverOpts ? `<select class="select" name="srvSel"><option value="">digitar outro…</option>${serverOpts}</select>` : ''}
+          <input class="input" name="xtream_server" placeholder="http://servidor.com:8080" value="${esc(d?.xtream_server)}" style="margin-top:8px"></label>
+        <div class="row2">
+          <label class="f"><span>usuário</span><input class="input" name="xtream_user" value="${esc(d?.xtream_user)}" autocomplete="off"></label>
+          <label class="f"><span>senha</span><input class="input" name="xtream_pass" value="${esc(d?.xtream_pass)}" autocomplete="off"></label>
+        </div>
+      </div>
+      <div id="tM"><label class="f"><span>link da lista m3u</span><input class="input" name="m3u_url" value="${esc(d?.m3u_url)}" placeholder="http://…/get.php?username=…"></label></div>
+      <label class="f"><span>vencimento</span>
+        <input class="input" type="date" name="expires_at" value="${d?.expires_at ? d.expires_at.slice(0, 10) : addDays(30)}">
+        <span style="display:flex;gap:4px;margin-top:8px">
+          ${[[30,'+30 dias'],[90,'+3 meses'],[180,'+6 meses'],[365,'+1 ano']].map(([n,l]) => `<button type="button" class="btn sm" data-days="${n}">${l}</button>`).join('')}
+          <button type="button" class="btn sm ghost" data-days="0">sem vencimento</button>
+        </span></label>
+      <div class="foot">
+        ${isNew ? '' : '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">remover</button>'}
+        <button type="button" class="btn" data-close>cancelar</button>
+        <button class="btn primary" id="mSave">${isNew ? 'vincular aparelho' : 'salvar'}</button>
+      </div>
+    </form>`);
+  const f = $('#mForm', ov);
+  const setType = t => {
+    type = t;
+    ov.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    $('#tX', ov).classList.toggle('hidden', t !== 'xtream');
+    $('#tM', ov).classList.toggle('hidden', t !== 'm3u');
+  };
+  ov.querySelectorAll('.seg button').forEach(b => b.onclick = () => setType(b.dataset.t));
+  setType(type);
+  if (f.srvSel) {
+    if (d?.xtream_server && [...f.srvSel.options].some(o => o.value === d.xtream_server)) f.srvSel.value = d.xtream_server;
+    const sync = () => { f.xtream_server.classList.toggle('hidden', !!f.srvSel.value); };
+    f.srvSel.onchange = sync; sync();
+  }
+  ov.querySelectorAll('[data-days]').forEach(b => b.onclick = () => {
+    const n = +b.dataset.days; f.expires_at.value = n ? addDays(n) : '';
+  });
+  if (f.code) f.code.focus(); else f.client_name.focus();
+
+  const del = $('#mDel', ov);
+  if (del) del.onclick = async () => {
+    if (!confirm('remover este aparelho? o app volta para a tela de código.')) return;
+    const { error } = await sb.from('se_devices').delete().eq('id', d.id);
+    if (error) return toast(error.message, true);
+    closeModal(); toast('aparelho removido'); reload();
+  };
+
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const btn = $('#mSave', ov); btn.disabled = true; $('#mErr', ov).innerHTML = '';
+    try {
+      const server = (f.srvSel && f.srvSel.value) || f.xtream_server.value.trim();
+      const row = {
+        client_name: f.client_name.value.trim() || null,
+        source_type: type,
+        m3u_url: type === 'm3u' ? f.m3u_url.value.trim() : null,
+        xtream_server: type === 'xtream' ? server.replace(/\/+$/, '') : null,
+        xtream_user: type === 'xtream' ? f.xtream_user.value.trim() : null,
+        xtream_pass: type === 'xtream' ? f.xtream_pass.value.trim() : null,
+        expires_at: f.expires_at.value ? new Date(f.expires_at.value + 'T23:59:59').toISOString() : null,
+      };
+      if (type === 'm3u' && !/^https?:\/\//i.test(row.m3u_url)) throw new Error('informe um link m3u começando com http');
+      if (type === 'xtream' && (!/^https?:\/\//i.test(row.xtream_server) || !row.xtream_user || !row.xtream_pass))
+        throw new Error('preencha servidor (com http), usuário e senha');
+      let id = d?.id;
+      if (isNew) {
+        const { data, error } = await sb.rpc('se_claim_device', { p_code: f.code.value });
+        if (error) throw new Error(error.message);
+        id = data;
+      }
+      const { error } = await sb.from('se_devices').update(row).eq('id', id);
+      if (error) throw new Error(error.message);
+      closeModal(); toast(isNew ? 'aparelho vinculado. o app libera sozinho em alguns segundos' : 'alterações salvas'); reload();
+    } catch (err) {
+      $('#mErr', ov).innerHTML = `<div class="alert err">${esc(err.message)}</div>`;
+    } finally { btn.disabled = false; }
+  };
+}
+
+/* ================= servidores ================= */
+function renderServers() {
+  const owner = me.role === 'owner';
+  if (!servers.length) {
+    $('#tServers').innerHTML = `<tr><td colspan="5"><div class="empty">
+      <svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>
+      <h3>nenhum servidor</h3><p class="muted small">sem servidor, o login por usuário e senha no app não funciona</p></div></td></tr>`;
+    return;
+  }
+  $('#tServers').innerHTML = servers.map(s => `<tr>
+    <td class="t1">${esc(s.name)}</td>
+    <td class="mono small">${esc(s.url)}</td>
+    <td class="hide-m col-res ${owner ? '' : 'hidden'}">${esc(nameOf(s.owner_id))}</td>
+    <td><span class="badge ${s.active ? 'ok' : 'idle'}">${s.active ? 'ativo' : 'pausado'}</span></td>
+    <td class="act">
+      <button class="btn sm" data-edit="${s.id}">editar</button>
+      <button class="btn sm ghost" data-toggle="${s.id}">${s.active ? 'pausar' : 'ativar'}</button>
+    </td></tr>`).join('');
+}
+$('#tServers').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.edit) serverModal(servers.find(s => s.id === b.dataset.edit));
+  if (b.dataset.toggle) {
+    const s = servers.find(x => x.id === b.dataset.toggle);
+    const { error } = await sb.from('se_servers').update({ active: !s.active }).eq('id', s.id);
+    if (error) return toast(error.message, true);
+    reload();
+  }
+});
+$('#addServer').onclick = () => serverModal(null);
+
+function serverModal(s) {
+  const ov = modal(`
+    <h2>${s ? 'editar servidor' : 'adicionar servidor'}</h2>
+    <p class="muted small" style="margin-bottom:24px">endereço do painel xtream, com http e porta</p>
+    <div id="mErr"></div>
+    <form id="mForm">
+      <label class="f"><span>nome</span><input class="input" name="name" value="${esc(s?.name)}" placeholder="ex: servidor principal" required></label>
+      <label class="f"><span>endereço</span><input class="input mono" name="url" value="${esc(s?.url)}" placeholder="http://servidor.com:8080" required></label>
+      <div class="foot">
+        ${s ? '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">apagar</button>' : ''}
+        <button type="button" class="btn" data-close>cancelar</button>
+        <button class="btn primary" id="mSave">salvar</button>
+      </div>
+    </form>`);
+  const f = $('#mForm', ov); f.name.focus();
+  const del = $('#mDel', ov);
+  if (del) del.onclick = async () => {
+    if (!confirm('apagar este servidor?')) return;
+    const { error } = await sb.from('se_servers').delete().eq('id', s.id);
+    if (error) return toast(error.message, true);
+    closeModal(); reload();
+  };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    let url = f.url.value.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+    const row = { name: f.name.value.trim(), url };
+    const q = s ? sb.from('se_servers').update(row).eq('id', s.id) : sb.from('se_servers').insert({ ...row, owner_id: me.id });
+    const { error } = await q;
+    if (error) { $('#mErr', ov).innerHTML = `<div class="alert err">${esc(error.message)}</div>`; return; }
+    closeModal(); toast('servidor salvo'); reload();
+  };
+}
+
+/* ================= revendedores ================= */
+function renderResellers() {
+  if (me.role !== 'owner') return;
+  const list = resellers.filter(p => p.role === 'reseller');
+  const count = id => devices.filter(d => d.reseller_id === id).length;
+  if (!list.length) {
+    $('#tResellers').innerHTML = `<tr><td colspan="5"><div class="empty">
+      <svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/></svg>
+      <h3>nenhum revendedor</h3><p class="muted small">crie o acesso e envie email e senha para o revendedor entrar neste mesmo painel</p></div></td></tr>`;
+    return;
+  }
+  $('#tResellers').innerHTML = list.map(p => `<tr>
+    <td class="t1">${esc(p.name) || '—'}</td>
+    <td class="hide-m muted">${esc(p.email)}</td>
+    <td>${count(p.id)}${p.max_devices != null ? ' <span class="faint">/ ' + p.max_devices + '</span>' : ''}</td>
+    <td><span class="badge ${p.active ? 'ok' : 'err'}">${p.active ? 'ativo' : 'bloqueado'}</span></td>
+    <td class="act">
+      <button class="btn sm" data-edit="${p.id}">editar</button>
+      <button class="btn sm ghost" data-toggle="${p.id}">${p.active ? 'bloquear' : 'liberar'}</button>
+    </td></tr>`).join('');
+}
+$('#tResellers').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.edit) resellerModal(resellers.find(p => p.id === b.dataset.edit));
+  if (b.dataset.toggle) {
+    const p = resellers.find(x => x.id === b.dataset.toggle);
+    if (p.active && !confirm('bloquear este revendedor? os aparelhos dele param de funcionar até você liberar.')) return;
+    const { error } = await sb.from('se_profiles').update({ active: !p.active }).eq('id', p.id);
+    if (error) return toast(error.message, true);
+    toast(p.active ? 'revendedor bloqueado' : 'revendedor liberado'); reload();
+  }
+});
+$('#addReseller').onclick = () => resellerModal(null);
+
+function resellerModal(p) {
+  const ov = modal(`
+    <h2>${p ? 'editar revendedor' : 'novo revendedor'}</h2>
+    <p class="muted small" style="margin-bottom:24px">${p ? esc(p.email) : 'o revendedor entra neste painel com o email e a senha abaixo'}</p>
+    <div id="mErr"></div>
+    <form id="mForm">
+      <label class="f"><span>nome</span><input class="input" name="name" value="${esc(p?.name)}" required></label>
+      ${p ? '' : '<label class="f"><span>email</span><input class="input" name="email" type="email" required></label>'}
+      <label class="f"><span>${p ? 'nova senha (deixe vazio para manter)' : 'senha'}</span><input class="input" name="password" ${p ? '' : 'required minlength="6"'} autocomplete="new-password"></label>
+      <label class="f"><span>limite de aparelhos (vazio = sem limite)</span><input class="input" name="max_devices" type="number" min="0" value="${p?.max_devices ?? ''}"></label>
+      <div class="foot">
+        ${p ? '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">apagar</button>' : ''}
+        <button type="button" class="btn" data-close>cancelar</button>
+        <button class="btn primary" id="mSave">salvar</button>
+      </div>
+    </form>`);
+  const f = $('#mForm', ov); f.name.focus();
+  const del = $('#mDel', ov);
+  if (del) del.onclick = async () => {
+    if (!confirm('apagar este revendedor? os aparelhos e servidores dele passam para você.')) return;
+    try { await fn('delete_reseller', { user_id: p.id }); closeModal(); toast('revendedor apagado'); reload(); }
+    catch (err) { toast(err.message, true); }
+  };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const btn = $('#mSave', ov); btn.disabled = true;
+    const max = f.max_devices.value === '' ? null : +f.max_devices.value;
+    try {
+      if (p) {
+        const { error } = await sb.from('se_profiles').update({ name: f.name.value.trim(), max_devices: max }).eq('id', p.id);
+        if (error) throw new Error(error.message);
+        if (f.password.value) await fn('set_password', { user_id: p.id, password: f.password.value });
+      } else {
+        await fn('create_reseller', { name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value, max_devices: max });
+      }
+      closeModal(); toast('revendedor salvo'); reload();
+    } catch (err) {
+      $('#mErr', ov).innerHTML = `<div class="alert err">${esc(err.message)}</div>`;
+    } finally { btn.disabled = false; }
+  };
+}
+
+boot();
+</script>
+</body>
+</html>
