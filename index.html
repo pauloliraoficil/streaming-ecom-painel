@@ -153,13 +153,17 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
     <nav class="nav">
       <a data-view="devices" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 21h6"/></svg>aparelhos</a>
       <a data-view="servers"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>servidores</a>
+      <a data-view="notices"><svg class="i" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>avisos</a>
+      <a data-view="logins" id="navLogins" class="hidden"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>logins</a>
+      <a data-view="errors" id="navErrors" class="hidden"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/></svg>erros do app</a>
       <a data-view="look"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M3 13h18M9 20h6M12 17v3"/></svg>aparência</a>
       <a data-view="app" id="navApp" class="hidden"><svg class="i" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M12 8v6M9.5 11.5 12 14l2.5-2.5M10 18.5h4"/></svg>aplicativo</a>
       <a data-view="resellers" id="navResellers" class="hidden"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.8 3.5 6"/></svg>revendedores</a>
     </nav>
     <div class="me">
       <div class="who small t1" id="meName" style="color:var(--t1)"></div>
-      <div class="who xs faint" id="meRole" style="margin-bottom:8px"></div>
+      <div class="who xs faint" id="meRole"></div>
+      <div class="who xs" id="meCredits" style="color:var(--in3);margin-bottom:8px"></div>
       <button class="btn ghost sm" id="logout"><svg class="i" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg>sair</button>
     </div>
   </aside>
@@ -180,12 +184,19 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
       <div class="bar">
         <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input class="input" id="qDevices" placeholder="buscar por código ou cliente"></div>
         <select class="select" id="fStatus" style="width:auto;height:36px;font-size:13px">
-          <option value="">todos os status</option><option value="ok">ativos</option><option value="soon">vencendo</option>
+          <option value="">todos os status</option><option value="online">online agora</option><option value="ok">ativos</option><option value="soon">vencendo</option>
           <option value="expired">vencidos</option><option value="blocked">bloqueados</option><option value="nolist">sem lista</option>
         </select>
       </div>
+      <div class="bar hidden" id="bulkBar" style="background:var(--bg1);border:1px solid var(--in);border-radius:8px;padding:8px 12px">
+        <span class="small t1" id="bulkCount" style="color:var(--t1)"></span>
+        <span class="muted small" style="margin-left:8px">renovar:</span>
+        <button class="btn sm" data-renew="30">+30 dias</button><button class="btn sm" data-renew="90">+3 meses</button>
+        <button class="btn sm" data-renew="180">+6 meses</button><button class="btn sm" data-renew="365">+1 ano</button>
+        <button class="btn sm ghost" id="bulkClear" style="margin-left:auto">limpar seleção</button>
+      </div>
       <div class="card tblwrap"><table class="tbl">
-        <thead><tr><th>código</th><th>cliente</th><th class="hide-m">lista</th><th>validade</th><th>status</th><th class="hide-m col-res">revendedor</th><th class="hide-m">último acesso</th><th></th></tr></thead>
+        <thead><tr><th style="width:32px"><input type="checkbox" id="selAll" aria-label="selecionar todos"></th><th>código</th><th>cliente</th><th class="hide-m">lista</th><th>validade</th><th>status</th><th class="hide-m col-res">revendedor</th><th class="hide-m">agora</th><th></th></tr></thead>
         <tbody id="tDevices"></tbody>
       </table></div>
     </section>
@@ -200,6 +211,44 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
       <div class="card tblwrap"><table class="tbl">
         <thead><tr><th>nome</th><th>endereço</th><th class="hide-m col-res">dono</th><th>status</th><th></th></tr></thead>
         <tbody id="tServers"></tbody>
+      </table></div>
+    </section>
+
+    <!-- avisos -->
+    <section id="v-notices" class="hidden">
+      <div class="head">
+        <div><h1>avisos</h1><p class="muted small" id="noticeSub">mensagens que aparecem na tela inicial do app. o cliente vê até clicar em "ok, entendi".</p></div>
+        <button class="btn primary" id="addNotice"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>novo aviso</button>
+      </div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>aviso</th><th class="hide-m col-res">de</th><th>até</th><th>status</th><th></th></tr></thead>
+        <tbody id="tNotices"></tbody>
+      </table></div>
+    </section>
+
+    <!-- logins -->
+    <section id="v-logins" class="hidden">
+      <div class="head">
+        <div><h1>logins por usuário e senha</h1><p class="muted small">aparelhos que entraram digitando usuário e senha. cada login pode ficar em até o limite abaixo.</p></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="small muted">aparelhos por login</span>
+          <input class="input" id="loginMax" type="number" min="0" style="width:80px;height:36px"><button class="btn" id="loginMaxSave">salvar</button></div>
+      </div>
+      <div class="hint">0 = sem limite. aparelhos sem uso há 30 dias não contam. "liberar vaga" tira o aparelho do login (ele precisa entrar de novo).</div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>login</th><th class="hide-m">servidor</th><th>aparelho</th><th>agora</th><th></th></tr></thead>
+        <tbody id="tLogins"></tbody>
+      </table></div>
+    </section>
+
+    <!-- erros -->
+    <section id="v-errors" class="hidden">
+      <div class="head">
+        <div><h1>erros do app</h1><p class="muted small">travamentos e falhas de reprodução enviados pelos aparelhos (últimos 200)</p></div>
+        <button class="btn" id="errClear">limpar tudo</button>
+      </div>
+      <div class="card tblwrap"><table class="tbl">
+        <thead><tr><th>quando</th><th>tipo</th><th>mensagem</th><th class="hide-m">aparelho</th></tr></thead>
+        <tbody id="tErrors"></tbody>
       </table></div>
     </section>
 
@@ -249,7 +298,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <button class="btn primary" id="addReseller"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>novo revendedor</button>
       </div>
       <div class="card tblwrap"><table class="tbl">
-        <thead><tr><th>nome</th><th class="hide-m">email</th><th>aparelhos</th><th>status</th><th></th></tr></thead>
+        <thead><tr><th>nome</th><th class="hide-m">email</th><th>aparelhos</th><th>créditos</th><th>status</th><th></th></tr></thead>
         <tbody id="tResellers"></tbody>
       </table></div>
     </section>
@@ -279,7 +328,8 @@ const ago = d => {
   return Math.floor(h / 24) + ' d';
 };
 
-let me = null, devices = [], servers = [], resellers = [], view = 'devices';
+let me = null, devices = [], servers = [], resellers = [], view = 'devices', allDevices = [], selected = new Set();
+const isOnline = d => d.last_seen && Date.now() - new Date(d.last_seen) < 6 * 60000;
 
 function toast(msg, err = false) {
   const el = document.createElement('div');
@@ -343,6 +393,9 @@ async function boot() {
   $('#meRole').textContent = p.role === 'owner' ? 'dono' : 'revendedor';
   $('#navResellers').classList.toggle('hidden', p.role !== 'owner');
   $('#navApp').classList.toggle('hidden', p.role !== 'owner');
+  $('#navLogins').classList.toggle('hidden', p.role !== 'owner');
+  $('#navErrors').classList.toggle('hidden', p.role !== 'owner');
+  $('#meCredits').textContent = p.role !== 'owner' && p.credits != null ? 'créditos: ' + p.credits : '';
   document.querySelectorAll('.col-res').forEach(el => el.classList.toggle('hidden', p.role !== 'owner'));
   await reload();
 }
@@ -352,21 +405,125 @@ document.querySelectorAll('.nav a').forEach(a => a.onclick = () => go(a.dataset.
 function go(v) {
   view = v;
   document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.view === v));
-  ['devices', 'servers', 'look', 'app', 'resellers'].forEach(x => $('#v-' + x).classList.toggle('hidden', x !== v));
+  ['devices', 'servers', 'notices', 'logins', 'errors', 'look', 'app', 'resellers'].forEach(x => $('#v-' + x).classList.toggle('hidden', x !== v));
 }
 
 async function reload() {
-  $('#tDevices').innerHTML = '<tr><td colspan="8"><div class="skel"></div><div class="skel"></div></td></tr>';
+  $('#tDevices').innerHTML = '<tr><td colspan="9"><div class="skel"></div><div class="skel"></div></td></tr>';
   const [d, s, r] = await Promise.all([
-    sb.from('se_devices').select('*').not('reseller_id', 'is', null).order('created_at', { ascending: false }),
+    sb.from('se_devices').select('*').order('created_at', { ascending: false }),
     sb.from('se_servers').select('*').order('created_at'),
-    me.role === 'owner' ? sb.from('se_profiles').select('*').order('created_at') : Promise.resolve({ data: [me] }),
+    me.role === 'owner' ? sb.from('se_profiles').select('*').order('created_at') : sb.from('se_profiles').select('*').eq('id', me.id),
   ]);
-  devices = d.data || []; servers = s.data || []; resellers = r.data || [];
-  renderDevices(); renderServers(); renderResellers();
+  allDevices = d.data || []; servers = s.data || []; resellers = r.data || [];
+  devices = allDevices.filter(x => x.reseller_id);
+  if (me.role !== 'owner') { const m = resellers.find(x => x.id === me.id); if (m) me = m; }
+  $('#meCredits').textContent = me.role !== 'owner' && me.credits != null ? 'créditos: ' + me.credits : '';
+  selected = new Set([...selected].filter(id => devices.some(x => x.id === id)));
+  renderDevices(); renderServers(); renderResellers(); renderLogins(); loadNotices();
+  if (me.role === 'owner') loadErrors();
   if (me.role === 'owner') loadApp();
   loadLook();
 }
+
+/* ================= avisos ================= */
+let notices = [];
+async function loadNotices() {
+  const { data } = await sb.from('se_notices').select('*').order('created_at', { ascending: false });
+  notices = data || [];
+  const owner = me.role === 'owner';
+  $('#noticeSub').textContent = owner
+    ? 'mensagens na tela inicial do app. os seus avisos aparecem para todos os aparelhos; os do revendedor, só para os aparelhos dele.'
+    : 'mensagens na tela inicial dos seus aparelhos. o cliente vê até clicar em "ok, entendi".';
+  if (!notices.length) { $('#tNotices').innerHTML = '<tr><td colspan="5"><div class="empty"><h3>nenhum aviso</h3><p class="muted small">ex.: "jogo do flamengo hoje 21h no canal premiere"</p></div></td></tr>'; return; }
+  $('#tNotices').innerHTML = notices.map(n => {
+    const live = n.active && (!n.ends_at || new Date(n.ends_at) > new Date());
+    return `<tr><td><div class="t1" style="color:var(--t1)">${esc(n.title)}</div><div class="muted small">${esc(n.message || '')}</div></td>
+      <td class="hide-m col-res ${owner ? '' : 'hidden'}">${esc(nameOf(n.owner_id))}</td>
+      <td>${n.ends_at ? fmtDate(n.ends_at) : '—'}</td>
+      <td><span class="badge ${live ? 'ok' : 'idle'}">${live ? 'no ar' : 'parado'}</span></td>
+      <td class="act"><button class="btn sm ghost" data-ntoggle="${n.id}">${n.active ? 'parar' : 'publicar'}</button><button class="btn sm danger" data-ndel="${n.id}">apagar</button></td></tr>`;
+  }).join('');
+}
+$('#tNotices').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ntoggle) {
+    const n = notices.find(x => x.id === b.dataset.ntoggle);
+    const { error } = await sb.from('se_notices').update({ active: !n.active }).eq('id', n.id);
+    if (error) return toast(error.message, true); loadNotices();
+  }
+  if (b.dataset.ndel) {
+    if (!confirm('apagar este aviso?')) return;
+    const { error } = await sb.from('se_notices').delete().eq('id', b.dataset.ndel);
+    if (error) return toast(error.message, true); loadNotices();
+  }
+});
+$('#addNotice').onclick = () => {
+  const ov = modal(`<h2>novo aviso</h2><p class="muted small" style="margin-bottom:24px">aparece na tela inicial do app</p><div id="mErr"></div>
+    <form id="mForm">
+      <label class="f"><span>título</span><input class="input" name="title" maxlength="80" required placeholder="jogo hoje 21h"></label>
+      <label class="f"><span>mensagem (opcional)</span><input class="input" name="message" maxlength="200" placeholder="flamengo x palmeiras no canal premiere 1"></label>
+      <label class="f"><span>mostrar até (opcional)</span><input class="input" type="date" name="ends"></label>
+      <div class="foot"><button type="button" class="btn" data-close>cancelar</button><button class="btn primary">publicar</button></div>
+    </form>`);
+  const f = $('#mForm', ov); f.title.focus();
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const { error } = await sb.from('se_notices').insert({ owner_id: me.id, title: f.title.value.trim(), message: f.message.value.trim() || null,
+      ends_at: f.ends.value ? new Date(f.ends.value + 'T23:59:59').toISOString() : null });
+    if (error) { $('#mErr', ov).innerHTML = `<div class="alert err">${esc(error.message)}</div>`; return; }
+    closeModal(); toast('aviso publicado'); loadNotices();
+  };
+};
+
+/* ================= logins ================= */
+async function renderLogins() {
+  if (me.role !== 'owner') return;
+  const { data: cfg } = await sb.from('se_settings').select('value').eq('key', 'login_max_devices').maybeSingle();
+  $('#loginMax').value = cfg?.value ?? 3;
+  const list = allDevices.filter(d => d.login_user && !d.reseller_id);
+  if (!list.length) { $('#tLogins').innerHTML = '<tr><td colspan="5"><div class="empty"><h3>nenhum login ainda</h3><p class="muted small">aparece aqui quando alguém entra no app com usuário e senha</p></div></td></tr>'; return; }
+  list.sort((a, b) => (a.login_user || '').localeCompare(b.login_user || ''));
+  $('#tLogins').innerHTML = list.map(d => `<tr>
+    <td class="t1" style="color:var(--t1)">${esc(d.login_user)}</td>
+    <td class="hide-m mono small">${esc(d.login_server || '')}</td>
+    <td><span class="mono">${fmtCode(d.code)}</span><div class="xs faint">${esc(d.model || '')}${d.app_version ? ' · v' + esc(d.app_version) : ''}</div></td>
+    <td>${isOnline(d) ? `<span class="badge ok">online</span> <span class="small">${esc(d.now_playing || '')}</span>` : `<span class="muted">${ago(d.last_seen)}</span>`}</td>
+    <td class="act"><button class="btn sm ghost" data-lhist="${d.id}">histórico</button><button class="btn sm" data-lfree="${d.id}">liberar vaga</button></td></tr>`).join('');
+}
+$('#tLogins').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.lhist) return historyModal(allDevices.find(d => d.id === b.dataset.lhist));
+  if (b.dataset.lfree) {
+    const { error } = await sb.from('se_devices').update({ login_user: null, login_server: null }).eq('id', b.dataset.lfree);
+    if (error) return toast(error.message, true); toast('vaga liberada'); reload();
+  }
+});
+$('#loginMaxSave').onclick = async () => {
+  const v = Math.max(0, parseInt($('#loginMax').value || '0', 10));
+  const { error } = await sb.from('se_settings').update({ value: String(v) }).eq('key', 'login_max_devices');
+  if (error) return toast(error.message, true); toast('limite salvo');
+};
+
+/* ================= erros ================= */
+async function loadErrors() {
+  const { data } = await sb.from('se_app_errors').select('*').order('at', { ascending: false }).limit(200);
+  const byId = Object.fromEntries(allDevices.map(d => [d.id, d]));
+  const list = data || [];
+  if (!list.length) { $('#tErrors').innerHTML = '<tr><td colspan="4"><div class="empty"><h3>nenhum erro registrado</h3><p class="muted small">quando um aparelho travar ou um canal falhar, aparece aqui</p></div></td></tr>'; return; }
+  $('#tErrors').innerHTML = list.map(x => {
+    const d = byId[x.device_id];
+    return `<tr title="${esc(x.detail || '')}"><td class="small muted">${new Date(x.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+      <td><span class="badge ${x.kind === 'crash' ? 'err' : 'warn'}">${x.kind === 'crash' ? 'travou' : 'reprodução'}</span></td>
+      <td class="small">${esc(x.message || '')}<div class="xs faint">v${esc(x.version || '?')}</div></td>
+      <td class="hide-m small">${d ? fmtCode(d.code) + ' ' + esc(d.client_name || d.login_user || '') : '—'}<div class="xs faint">${esc(x.model || '')}</div></td></tr>`;
+  }).join('');
+}
+$('#errClear').onclick = async () => {
+  if (!confirm('apagar todos os erros registrados?')) return;
+  const { error } = await sb.from('se_app_errors').delete().gt('id', 0);
+  if (error) return toast(error.message, true); loadErrors();
+};
 
 /* ================= aparência ================= */
 let lookModel = 1;
@@ -437,29 +594,35 @@ function renderDevices() {
   const fs = $('#fStatus').value;
   const rows = devices.filter((d, i) =>
     (!q || d.code.toLowerCase().includes(q) || (d.client_name || '').toLowerCase().includes(q)) &&
-    (!fs || st[i][0] === fs));
+    (!fs || (fs === 'online' ? isOnline(d) : st[i][0] === fs)));
 
   if (!devices.length) {
-    $('#tDevices').innerHTML = `<tr><td colspan="8"><div class="empty">
+    $('#tDevices').innerHTML = `<tr><td colspan="9"><div class="empty">
       <svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 21h6"/></svg>
       <h3>nenhum aparelho ainda</h3><p class="muted small" style="margin-bottom:16px">abra o app na tv ou no celular, escolha "código do aparelho" e cadastre o código aqui</p>
       <button class="btn primary" onclick="document.getElementById('addDevice').click()">adicionar aparelho</button></div></td></tr>`;
     return;
   }
-  if (!rows.length) { $('#tDevices').innerHTML = '<tr><td colspan="8" class="empty muted small">nada encontrado</td></tr>'; return; }
+  if (!rows.length) { $('#tDevices').innerHTML = '<tr><td colspan="9" class="empty muted small">nada encontrado</td></tr>'; return; }
   const owner = me.role === 'owner';
+  paintBulk();
   $('#tDevices').innerHTML = rows.map(d => {
     const [, label, cls] = devStatus(d);
     const src = d.source_type === 'm3u' ? '<span class="tag">m3u</span>' : d.source_type === 'xtream' ? `<span class="tag">xtream</span> <span class="faint">${esc(d.xtream_user)}</span>` : '<span class="faint">—</span>';
+    const now = isOnline(d)
+      ? `<span class="badge ok">online</span>${d.now_playing ? ' <span class="small" style="color:var(--t2)">' + esc(d.now_playing) + '</span>' : ''}`
+      : `<span class="muted">${ago(d.last_seen)}</span>`;
     return `<tr>
-      <td class="mono t1">${fmtCode(d.code)}</td>
+      <td><input type="checkbox" data-sel="${d.id}" ${selected.has(d.id) ? 'checked' : ''} aria-label="selecionar"></td>
+      <td class="mono t1">${fmtCode(d.code)}${d.app_version ? '<div class="xs faint">v' + esc(d.app_version) + '</div>' : ''}</td>
       <td>${esc(d.client_name) || '<span class="faint">sem nome</span>'}</td>
       <td class="hide-m">${src}</td>
       <td>${fmtDate(d.expires_at)}</td>
       <td><span class="badge ${cls}">${label}</span></td>
       <td class="hide-m col-res ${owner ? '' : 'hidden'}">${esc(nameOf(d.reseller_id))}</td>
-      <td class="hide-m muted">${ago(d.last_seen)}</td>
+      <td class="hide-m">${now}</td>
       <td class="act">
+        <button class="btn sm ghost" data-hist="${d.id}">histórico</button>
         <button class="btn sm" data-edit="${d.id}">editar</button>
         <button class="btn sm ghost" data-toggle="${d.id}">${d.active ? 'bloquear' : 'liberar'}</button>
       </td></tr>`;
@@ -467,8 +630,39 @@ function renderDevices() {
 }
 $('#qDevices').oninput = renderDevices;
 $('#fStatus').onchange = renderDevices;
+function paintBulk() {
+  $('#bulkBar').classList.toggle('hidden', selected.size === 0);
+  $('#bulkCount').textContent = selected.size + (selected.size === 1 ? ' aparelho selecionado' : ' aparelhos selecionados');
+}
+$('#tDevices').addEventListener('change', e => {
+  const id = e.target.dataset?.sel; if (!id) return;
+  e.target.checked ? selected.add(id) : selected.delete(id); paintBulk();
+});
+$('#selAll').onchange = e => {
+  document.querySelectorAll('#tDevices [data-sel]').forEach(c => { c.checked = e.target.checked; c.checked ? selected.add(c.dataset.sel) : selected.delete(c.dataset.sel); });
+  paintBulk();
+};
+$('#bulkClear').onclick = () => { selected.clear(); $('#selAll').checked = false; renderDevices(); paintBulk(); };
+document.querySelectorAll('[data-renew]').forEach(b => b.onclick = async () => {
+  const days = +b.dataset.renew;
+  if (!confirm(`renovar ${selected.size} aparelho(s) por ${days} dias?`)) return;
+  const { data, error } = await sb.rpc('se_renew_devices', { p_ids: [...selected], p_days: days });
+  if (error) return toast(error.message, true);
+  toast(data + ' aparelho(s) renovado(s)'); selected.clear(); $('#selAll').checked = false; paintBulk(); reload();
+});
+
+async function historyModal(d) {
+  const ov = modal(`<h2>histórico · ${fmtCode(d.code)}</h2><p class="muted small" style="margin-bottom:16px">${esc(d.client_name || '')} ${d.model ? '· ' + esc(d.model) : ''}</p>
+    <div id="hList"><div class="skel"></div></div><div class="foot"><button class="btn" data-close>fechar</button></div>`);
+  const { data } = await sb.from('se_play_log').select('*').eq('device_id', d.id).order('at', { ascending: false }).limit(50);
+  $('#hList', ov).innerHTML = (data || []).length
+    ? '<table class="tbl">' + data.map(h => `<tr><td>${esc(h.title)}</td><td class="muted small">${esc(h.kind || '')}</td><td class="muted small" style="text-align:right">${new Date(h.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td></tr>`).join('') + '</table>'
+    : '<p class="muted small">nada assistido ainda</p>';
+}
+
 $('#tDevices').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.hist) return historyModal(devices.find(d => d.id === b.dataset.hist));
   if (b.dataset.edit) deviceModal(devices.find(d => d.id === b.dataset.edit));
   if (b.dataset.toggle) {
     const d = devices.find(x => x.id === b.dataset.toggle);
@@ -665,6 +859,7 @@ function renderResellers() {
     <td class="t1">${esc(p.name) || '—'}</td>
     <td class="hide-m muted">${esc(p.email)}</td>
     <td>${count(p.id)}${p.max_devices != null ? ' <span class="faint">/ ' + p.max_devices + '</span>' : ''}</td>
+    <td>${p.credits == null ? '<span class="faint">sem limite</span>' : p.credits}</td>
     <td><span class="badge ${p.active ? 'ok' : 'err'}">${p.active ? 'ativo' : 'bloqueado'}</span></td>
     <td class="act">
       <button class="btn sm" data-edit="${p.id}">editar</button>
@@ -694,6 +889,7 @@ function resellerModal(p) {
       ${p ? '' : '<label class="f"><span>email</span><input class="input" name="email" type="email" required></label>'}
       <label class="f"><span>${p ? 'nova senha (deixe vazio para manter)' : 'senha'}</span><input class="input" name="password" ${p ? '' : 'required minlength="6"'} autocomplete="new-password"></label>
       <label class="f"><span>limite de aparelhos (vazio = sem limite)</span><input class="input" name="max_devices" type="number" min="0" value="${p?.max_devices ?? ''}"></label>
+      <label class="f"><span>créditos (1 crédito = 30 dias de 1 aparelho · vazio = sem limite)</span><input class="input" name="credits" type="number" min="0" value="${p?.credits ?? ''}"></label>
       <div class="foot">
         ${p ? '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">apagar</button>' : ''}
         <button type="button" class="btn" data-close>cancelar</button>
@@ -713,11 +909,13 @@ function resellerModal(p) {
     const max = f.max_devices.value === '' ? null : +f.max_devices.value;
     try {
       if (p) {
-        const { error } = await sb.from('se_profiles').update({ name: f.name.value.trim(), max_devices: max }).eq('id', p.id);
+        const credits = f.credits.value === '' ? null : Math.max(0, +f.credits.value);
+        const { error } = await sb.from('se_profiles').update({ name: f.name.value.trim(), max_devices: max, credits }).eq('id', p.id);
         if (error) throw new Error(error.message);
         if (f.password.value) await fn('set_password', { user_id: p.id, password: f.password.value });
       } else {
-        await fn('create_reseller', { name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value, max_devices: max });
+        const res = await fn('create_reseller', { name: f.name.value.trim(), email: f.email.value.trim(), password: f.password.value, max_devices: max });
+        if (f.credits.value !== '' && res.id) await sb.from('se_profiles').update({ credits: Math.max(0, +f.credits.value) }).eq('id', res.id);
       }
       closeModal(); toast('revendedor salvo'); reload();
     } catch (err) {
