@@ -82,6 +82,14 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
 .tbl td.act{text-align:right;white-space:nowrap}
 .tbl .t1{color:var(--t1);font-weight:510}
 .tblwrap{overflow-x:auto}
+@media (max-width:600px){
+  .tbl.cards thead{display:none}
+  .tbl.cards tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 16px;border-bottom:1px solid var(--b1)}
+  .tbl.cards tr:last-child{border-bottom:0}
+  .tbl.cards td{padding:0;border:0}
+  .tbl.cards td.act{flex-basis:100%;text-align:left;display:flex;gap:4px;flex-wrap:wrap}
+  .tbl.cards td:has(.empty){flex-basis:100%}
+}
 .badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:510;border:1px solid var(--b2);color:var(--t3)}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
 .badge.ok{color:var(--ok);border-color:rgba(76,183,130,.3)}
@@ -191,11 +199,11 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
       <div class="bar hidden" id="bulkBar" style="background:var(--bg1);border:1px solid var(--in);border-radius:8px;padding:8px 12px">
         <span class="small t1" id="bulkCount" style="color:var(--t1)"></span>
         <span class="muted small" style="margin-left:8px">renovar:</span>
-        <button class="btn sm" data-renew="30">+30 dias</button><button class="btn sm" data-renew="90">+3 meses</button>
-        <button class="btn sm" data-renew="180">+6 meses</button><button class="btn sm" data-renew="365">+1 ano</button>
+        <button class="btn sm" data-renew="30">+1 mês</button><button class="btn sm" data-renew="90">+3 meses</button>
+        <button class="btn sm" data-renew="180">+6 meses</button><button class="btn sm" data-renew="360">+1 ano</button>
         <button class="btn sm ghost" id="bulkClear" style="margin-left:auto">limpar seleção</button>
       </div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th style="width:32px"><input type="checkbox" id="selAll" aria-label="selecionar todos"></th><th>código</th><th>cliente</th><th class="hide-m">lista</th><th>validade</th><th>status</th><th class="hide-m col-res">revendedor</th><th class="hide-m">agora</th><th></th></tr></thead>
         <tbody id="tDevices"></tbody>
       </table></div>
@@ -208,7 +216,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <button class="btn primary" id="addServer"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>adicionar servidor</button>
       </div>
       <div class="hint">no login por usuário e senha o app testa os servidores ativos, um por um, até achar onde o login existe.</div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th>nome</th><th>endereço</th><th class="hide-m col-res">dono</th><th>status</th><th></th></tr></thead>
         <tbody id="tServers"></tbody>
       </table></div>
@@ -220,7 +228,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <div><h1>avisos</h1><p class="muted small" id="noticeSub">mensagens que aparecem na tela inicial do app. o cliente vê até clicar em "ok, entendi".</p></div>
         <button class="btn primary" id="addNotice"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>novo aviso</button>
       </div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th>aviso</th><th class="hide-m col-res">de</th><th>até</th><th>status</th><th></th></tr></thead>
         <tbody id="tNotices"></tbody>
       </table></div>
@@ -234,7 +242,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
           <input class="input" id="loginMax" type="number" min="0" style="width:80px;height:36px"><button class="btn" id="loginMaxSave">salvar</button></div>
       </div>
       <div class="hint">0 = sem limite. aparelhos sem uso há 30 dias não contam. "liberar vaga" tira o aparelho do login (ele precisa entrar de novo).</div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th>login</th><th class="hide-m">servidor</th><th>aparelho</th><th>agora</th><th></th></tr></thead>
         <tbody id="tLogins"></tbody>
       </table></div>
@@ -246,7 +254,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <div><h1>erros do app</h1><p class="muted small">travamentos e falhas de reprodução enviados pelos aparelhos (últimos 200)</p></div>
         <button class="btn" id="errClear">limpar tudo</button>
       </div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th>quando</th><th>tipo</th><th>mensagem</th><th class="hide-m">aparelho</th></tr></thead>
         <tbody id="tErrors"></tbody>
       </table></div>
@@ -297,7 +305,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <div><h1>revendedores</h1><p class="muted small">cada revendedor gerencia só os aparelhos e servidores dele</p></div>
         <button class="btn primary" id="addReseller"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>novo revendedor</button>
       </div>
-      <div class="card tblwrap"><table class="tbl">
+      <div class="card tblwrap"><table class="tbl cards">
         <thead><tr><th>nome</th><th class="hide-m">email</th><th>aparelhos</th><th>créditos</th><th>status</th><th></th></tr></thead>
         <tbody id="tResellers"></tbody>
       </table></div>
@@ -647,7 +655,10 @@ $('#selAll').onchange = e => {
 $('#bulkClear').onclick = () => { selected.clear(); $('#selAll').checked = false; renderDevices(); paintBulk(); };
 document.querySelectorAll('[data-renew]').forEach(b => b.onclick = async () => {
   const days = +b.dataset.renew;
-  if (!confirm(`renovar ${selected.size} aparelho(s) por ${days} dias?`)) return;
+  const cost = selected.size * Math.ceil(days / 30);
+  const useCredits = me.role !== 'owner' && me.credits != null;
+  if (useCredits && cost > me.credits) return toast(`créditos insuficientes: precisa de ${cost}, você tem ${me.credits}`, true);
+  if (!confirm(`renovar ${selected.size} aparelho(s) por ${days / 30} ${days > 30 ? 'meses' : 'mês'}?${useCredits ? ` usa ${cost} crédito(s).` : ''}`)) return;
   const { data, error } = await sb.rpc('se_renew_devices', { p_ids: [...selected], p_days: days });
   if (error) return toast(error.message, true);
   toast(data + ' aparelho(s) renovado(s)'); selected.clear(); $('#selAll').checked = false; paintBulk(); reload();
