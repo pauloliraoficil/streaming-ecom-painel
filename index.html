@@ -163,7 +163,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
     <div class="me">
       <div class="who small t1" id="meName" style="color:var(--t1)"></div>
       <div class="who xs faint" id="meRole"></div>
-      <div class="who xs" id="meCredits" style="color:var(--in3);margin-bottom:8px"></div>
+      <div class="who xs" id="meCredits" style="color:var(--in3);margin-bottom:8px;cursor:pointer" title="ver extrato"></div>
       <button class="btn ghost sm" id="logout"><svg class="i" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg>sair</button>
     </div>
   </aside>
@@ -379,6 +379,7 @@ $('#authForm').addEventListener('submit', async e => {
   } finally { btn.disabled = false; }
 });
 
+$('#meCredits').onclick = () => { if (me && me.role !== 'owner' && me.credits != null) creditLog(me); };
 $('#logout').onclick = async () => { await sb.auth.signOut(); me = null; showAuth(); };
 
 async function boot() {
@@ -579,6 +580,7 @@ function devStatus(d) {
   if (!d.source_type) return ['nolist', 'sem lista', 'idle'];
   if (!d.active) return ['blocked', 'bloqueado', 'err'];
   if (d.expires_at && new Date(d.expires_at) < new Date()) return ['expired', 'vencido', 'err'];
+  if (d.trial_until && new Date(d.trial_until) > new Date() && new Date(d.expires_at) <= new Date(d.trial_until)) return ['soon', 'teste', 'warn'];
   if (d.expires_at && new Date(d.expires_at) - new Date() < 7 * 864e5) return ['soon', 'vence logo', 'warn'];
   return ['ok', 'ativo', 'ok'];
 }
@@ -687,6 +689,8 @@ function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return d
 
 function deviceModal(d) {
   const isNew = !d;
+  const creditMode = me.role !== 'owner' && me.credits != null;
+  let months = 1;
   let type = d?.source_type || 'xtream';
   const serverOpts = servers.filter(s => s.active).map(s => `<option value="${esc(s.url)}">${esc(s.name)} · ${esc(s.url)}</option>`).join('');
   const ov = modal(`
@@ -708,12 +712,18 @@ function deviceModal(d) {
         </div>
       </div>
       <div id="tM"><label class="f"><span>link da lista m3u</span><input class="input" name="m3u_url" value="${esc(d?.m3u_url)}" placeholder="http://…/get.php?username=…"></label></div>
-      <label class="f"><span>vencimento</span>
+      ${isNew ? `<span class="xs muted" style="display:block;margin-bottom:8px;font-weight:510">período</span>
+        <div class="seg" id="mPer">${[[0,'teste 24h'],[1,'1 mês'],[3,'3 meses'],[6,'6 meses'],[12,'1 ano']].map(([n,l]) => `<button type="button" data-m="${n}">${l}</button>`).join('')}</div>
+        <p class="xs muted" id="mCost" style="margin:-8px 0 16px"></p>`
+      : creditMode ? `<div class="f"><span>vencimento</span>
+        <div class="t1" style="margin:4px 0 8px">${fmtDate(d.expires_at)}${d.trial_until ? ' <span class="tag">teste</span>' : ''}</div>
+        <span style="display:flex;gap:4px;flex-wrap:wrap">${[[1,'+1 mês'],[3,'+3 meses'],[6,'+6 meses'],[12,'+1 ano']].map(([n,l]) => `<button type="button" class="btn sm" data-renew1="${n}">${l} · ${n} crédito${n > 1 ? 's' : ''}</button>`).join('')}</span></div>`
+      : `<label class="f"><span>vencimento</span>
         <input class="input" type="date" name="expires_at" value="${d?.expires_at ? d.expires_at.slice(0, 10) : addDays(30)}">
         <span style="display:flex;gap:4px;margin-top:8px">
           ${[[30,'+30 dias'],[90,'+3 meses'],[180,'+6 meses'],[365,'+1 ano']].map(([n,l]) => `<button type="button" class="btn sm" data-days="${n}">${l}</button>`).join('')}
           <button type="button" class="btn sm ghost" data-days="0">sem vencimento</button>
-        </span></label>
+        </span></label>`}
       <div class="foot">
         ${isNew ? '' : '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">remover</button>'}
         <button type="button" class="btn" data-close>cancelar</button>
@@ -737,6 +747,23 @@ function deviceModal(d) {
   ov.querySelectorAll('[data-days]').forEach(b => b.onclick = () => {
     const n = +b.dataset.days; f.expires_at.value = n ? addDays(n) : '';
   });
+  const setPer = m => {
+    months = m;
+    ov.querySelectorAll('#mPer button').forEach(b => b.classList.toggle('on', +b.dataset.m === m));
+    const c = $('#mCost', ov); if (!c) return;
+    c.textContent = m === 0 ? 'teste grátis de 24 horas · 1 por aparelho'
+      : creditMode ? `vence em ${fmtDate(new Date(Date.now() + m * 30 * 864e5).toISOString())} · usa ${m} crédito${m > 1 ? 's' : ''} (você tem ${me.credits})`
+      : `vence em ${fmtDate(new Date(Date.now() + m * 30 * 864e5).toISOString())}`;
+  };
+  ov.querySelectorAll('#mPer button').forEach(b => b.onclick = () => setPer(+b.dataset.m));
+  if (isNew) setPer(1);
+  ov.querySelectorAll('[data-renew1]').forEach(b => b.onclick = async () => {
+    const m = +b.dataset.renew1;
+    if (!confirm(`renovar por ${m} ${m > 1 ? 'meses' : 'mês'}? usa ${m} crédito${m > 1 ? 's' : ''}.`)) return;
+    const { error } = await sb.rpc('se_renew_devices', { p_ids: [d.id], p_days: 30 * m });
+    if (error) return toast(error.message, true);
+    closeModal(); toast('aparelho renovado'); reload();
+  });
   if (f.code) f.code.focus(); else f.client_name.focus();
 
   const del = $('#mDel', ov);
@@ -759,14 +786,15 @@ function deviceModal(d) {
         xtream_server: type === 'xtream' ? server.replace(/\/+$/, '') : null,
         xtream_user: type === 'xtream' ? f.xtream_user.value.trim() : null,
         xtream_pass: type === 'xtream' ? f.xtream_pass.value.trim() : null,
-        expires_at: f.expires_at.value ? new Date(f.expires_at.value + 'T23:59:59').toISOString() : null,
       };
+      if (!isNew && f.expires_at) row.expires_at = f.expires_at.value ? new Date(f.expires_at.value + 'T23:59:59').toISOString() : null;
       if (type === 'm3u' && !/^https?:\/\//i.test(row.m3u_url)) throw new Error('informe um link m3u começando com http');
       if (type === 'xtream' && (!/^https?:\/\//i.test(row.xtream_server) || !row.xtream_user || !row.xtream_pass))
         throw new Error('preencha servidor (com http), usuário e senha');
       let id = d?.id;
       if (isNew) {
-        const { data, error } = await sb.rpc('se_claim_device', { p_code: f.code.value });
+        if (creditMode && months > me.credits) throw new Error(`créditos insuficientes: precisa de ${months}, você tem ${me.credits}`);
+        const { data, error } = await sb.rpc('se_activate_device', { p_code: f.code.value, p_months: months });
         if (error) throw new Error(error.message);
         id = data;
       }
@@ -825,6 +853,7 @@ function serverModal(s) {
       </div>
     </form>`);
   const f = $('#mForm', ov); f.name.focus();
+  ov.querySelectorAll('[data-cadd]').forEach(b => b.onclick = () => { f.credits.value = (+f.credits.value || 0) + +b.dataset.cadd; });
   const del = $('#mDel', ov);
   if (del) del.onclick = async () => {
     if (!confirm('apagar este servidor?')) return;
@@ -862,12 +891,14 @@ function renderResellers() {
     <td>${p.credits == null ? '<span class="faint">sem limite</span>' : p.credits}</td>
     <td><span class="badge ${p.active ? 'ok' : 'err'}">${p.active ? 'ativo' : 'bloqueado'}</span></td>
     <td class="act">
+      <button class="btn sm ghost" data-clog="${p.id}">extrato</button>
       <button class="btn sm" data-edit="${p.id}">editar</button>
       <button class="btn sm ghost" data-toggle="${p.id}">${p.active ? 'bloquear' : 'liberar'}</button>
     </td></tr>`).join('');
 }
 $('#tResellers').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.clog) return creditLog(resellers.find(p => p.id === b.dataset.clog));
   if (b.dataset.edit) resellerModal(resellers.find(p => p.id === b.dataset.edit));
   if (b.dataset.toggle) {
     const p = resellers.find(x => x.id === b.dataset.toggle);
@@ -879,6 +910,15 @@ $('#tResellers').addEventListener('click', async e => {
 });
 $('#addReseller').onclick = () => resellerModal(null);
 
+async function creditLog(p) {
+  const ov = modal(`<h2>extrato de créditos</h2><p class="muted small" style="margin-bottom:16px">${esc(p.name || p.email)} · saldo ${p.credits == null ? 'sem limite' : p.credits}</p>
+    <div id="cList"><div class="skel"></div></div><div class="foot"><button class="btn" data-close>fechar</button></div>`);
+  const { data } = await sb.from('se_credit_log').select('*').eq('reseller_id', p.id).order('at', { ascending: false }).limit(100);
+  $('#cList', ov).innerHTML = (data || []).length
+    ? '<table class="tbl">' + data.map(c => `<tr><td class="muted small">${new Date(c.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${esc(c.reason || '')}</td><td class="mono" style="text-align:right;color:${c.delta < 0 ? 'var(--t2)' : 'var(--ok)'}">${c.delta > 0 ? '+' : ''}${c.delta}</td><td class="mono muted" style="text-align:right">${c.balance ?? '∞'}</td></tr>`).join('') + '</table>'
+    : '<p class="muted small">nenhuma movimentação ainda</p>';
+}
+
 function resellerModal(p) {
   const ov = modal(`
     <h2>${p ? 'editar revendedor' : 'novo revendedor'}</h2>
@@ -889,7 +929,8 @@ function resellerModal(p) {
       ${p ? '' : '<label class="f"><span>email</span><input class="input" name="email" type="email" required></label>'}
       <label class="f"><span>${p ? 'nova senha (deixe vazio para manter)' : 'senha'}</span><input class="input" name="password" ${p ? '' : 'required minlength="6"'} autocomplete="new-password"></label>
       <label class="f"><span>limite de aparelhos (vazio = sem limite)</span><input class="input" name="max_devices" type="number" min="0" value="${p?.max_devices ?? ''}"></label>
-      <label class="f"><span>créditos (1 crédito = 30 dias de 1 aparelho · vazio = sem limite)</span><input class="input" name="credits" type="number" min="0" value="${p?.credits ?? ''}"></label>
+      <label class="f"><span>créditos (1 crédito = 30 dias de 1 aparelho · vazio = sem limite)</span><input class="input" name="credits" type="number" min="0" value="${p?.credits ?? ''}">
+        <span style="display:flex;gap:4px;margin-top:8px">${[10,30,50,100].map(n => `<button type="button" class="btn sm" data-cadd="${n}">+${n}</button>`).join('')}</span></label>
       <div class="foot">
         ${p ? '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">apagar</button>' : ''}
         <button type="button" class="btn" data-close>cancelar</button>
@@ -897,6 +938,7 @@ function resellerModal(p) {
       </div>
     </form>`);
   const f = $('#mForm', ov); f.name.focus();
+  ov.querySelectorAll('[data-cadd]').forEach(b => b.onclick = () => { f.credits.value = (+f.credits.value || 0) + +b.dataset.cadd; });
   const del = $('#mDel', ov);
   if (del) del.onclick = async () => {
     if (!confirm('apagar este revendedor? os aparelhos e servidores dele passam para você.')) return;
@@ -910,7 +952,10 @@ function resellerModal(p) {
     try {
       if (p) {
         const credits = f.credits.value === '' ? null : Math.max(0, +f.credits.value);
-        const { error } = await sb.from('se_profiles').update({ name: f.name.value.trim(), max_devices: max, credits }).eq('id', p.id);
+        const upd = { name: f.name.value.trim(), max_devices: max };
+        // só envia créditos se você mudou (evita apagar o que o revendedor usou enquanto a tela estava aberta)
+        if (credits !== (p.credits ?? null)) upd.credits = credits;
+        const { error } = await sb.from('se_profiles').update(upd).eq('id', p.id);
         if (error) throw new Error(error.message);
         if (f.password.value) await fn('set_password', { user_id: p.id, password: f.password.value });
       } else {
