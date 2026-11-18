@@ -183,6 +183,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
         <div><h1>aparelhos</h1><p class="muted small">vincule o código que aparece na tela do app e defina a lista do cliente</p></div>
         <button class="btn primary" id="addDevice"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>adicionar aparelho</button>
       </div>
+      <div id="creditBox"></div>
       <div class="kpis">
         <div class="card kpi"><div class="xs muted">total</div><div class="v" id="kTotal">0</div></div>
         <div class="card kpi"><div class="xs muted">ativos</div><div class="v" id="kOk">0</div></div>
@@ -263,7 +264,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stro
     <!-- aparencia -->
     <section id="v-look" class="hidden">
       <div class="head">
-        <div><h1>aparência</h1><p class="muted small" id="lookSub">escolha o modelo da tela inicial dos seus aparelhos (tv e tablet). no celular o app usa sempre a versão compacta.</p></div>
+        <div><h1>aparência</h1><p class="muted small" id="lookSub">escolha o modelo da tela inicial dos seus aparelhos (tv e tablet). no celular os modelos 1 a 5 usam a versão compacta; o modelo 6 (estilo netflix) aparece igual em tudo.</p></div>
         <button class="btn primary" id="lookSave">salvar</button>
       </div>
       <div class="models"><button class="card model" data-model="1" type="button"><div class="mprev"><div style="display:grid;grid-template-columns:1.4fr 1fr;gap:4px"><b class="pv h"></b><div style="display:grid;gap:4px"><b class="pv"></b><b class="pv"></b></div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px"><b class="pv m"></b><b class="pv m"></b><b class="pv m"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">1 · destaque</div><div class="muted small">continuar assistindo grande, busca e favoritos ao lado, 3 cartões</div></button><button class="card model" data-model="2" type="button"><div class="mprev"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px"><b class="pv xl"></b><b class="pv xl"></b><b class="pv xl"></b></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:4px"><b class="pv"></b><b class="pv"></b><b class="pv"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">2 · cartões grandes</div><div class="muted small">tv ao vivo, filmes e séries em cartões gigantes</div></button><button class="card model" data-model="3" type="button"><div class="mprev"><div style="display:grid;grid-template-columns:1fr 2fr;gap:4px"><div style="display:grid;gap:3px"><b class="pv s"></b><b class="pv s"></b><b class="pv s"></b><b class="pv s"></b></div><b class="pv h"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">3 · menu lateral</div><div class="muted small">menu à esquerda e destaque grande à direita</div></button><button class="card model" data-model="4" type="button"><div class="mprev"><div style="text-align:center;color:var(--t1);font-weight:590;font-size:15px;line-height:1.2">20:14</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px"><b class="pv"></b><b class="pv"></b><b class="pv"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">4 · minimalista</div><div class="muted small">relógio grande no centro, visual limpo</div></button><button class="card model" data-model="5" type="button"><div class="mprev"><b class="pv h" style="display:block"></b><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:4px"><b class="pv s"></b><b class="pv s"></b><b class="pv s"></b><b class="pv s"></b><b class="pv s"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">5 · vitrine</div><div class="muted small">destaque largo e faixa de recentes em primeiro plano</div></button><button class="card model" data-model="6" type="button"><div class="mprev"><b class="pv h" style="display:block;height:30px"></b><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:5px"><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b></div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:4px"><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b><b class="pv" style="height:26px"></b></div></div><div class="t1" style="color:var(--t1);font-weight:510;margin-top:12px">6 · cinema</div><div class="muted small">estilo netflix: destaque do dia e fileiras de capas por categoria (vale também no celular)</div></button></div>
@@ -540,8 +541,8 @@ function loadLook() {
   lookModel = me.home_model || 1;
   $('#lookWhats').value = me.support_whatsapp || '';
   $('#lookSub').textContent = me.role === 'owner'
-    ? 'escolha o modelo da tela inicial. ele vale para o login por usuário e para os revendedores que não escolherem um. no celular o app usa sempre a versão compacta.'
-    : 'escolha o modelo da tela inicial dos seus aparelhos (tv e tablet). no celular o app usa sempre a versão compacta.';
+    ? 'escolha o modelo da tela inicial. ele vale para o login por usuário e para os revendedores que não escolherem um. no celular os modelos 1 a 5 usam a versão compacta; o modelo 6 (estilo netflix) aparece igual em tudo.'
+    : 'escolha o modelo da tela inicial dos seus aparelhos (tv e tablet). no celular os modelos 1 a 5 usam a versão compacta; o modelo 6 (estilo netflix) aparece igual em tudo.';
   paintLook();
 }
 function paintLook() {
@@ -595,6 +596,11 @@ function devStatus(d) {
 
 function renderDevices() {
   const st = devices.map(devStatus);
+  const cm = me.role !== 'owner' && me.credits != null;
+  $('#creditBox').innerHTML = cm ? `<div class="alert ${me.credits <= 2 ? 'err' : 'ok'}" style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <span>${me.credits <= 0 ? 'você está sem créditos' : `você tem <b>${me.credits}</b> crédito${me.credits > 1 ? 's' : ''}`} · 1 crédito = 1 mês de 1 aparelho${me.credits <= 2 ? ' · fale com seu fornecedor para recarregar' : ''}</span>
+    <button class="btn sm ghost" style="margin-left:auto" id="cbLog">extrato</button></div>` : '';
+  if (cm) $('#cbLog').onclick = () => creditLog(me);
   $('#kTotal').textContent = devices.length;
   $('#kOk').textContent = st.filter(s => s[0] === 'ok' || s[0] === 'soon').length;
   $('#kSoon').textContent = st.filter(s => s[0] === 'soon').length;
@@ -940,7 +946,7 @@ function resellerModal(p) {
       ${p ? '' : '<label class="f"><span>email</span><input class="input" name="email" type="email" required></label>'}
       <label class="f"><span>${p ? 'nova senha (deixe vazio para manter)' : 'senha'}</span><input class="input" name="password" ${p ? '' : 'required minlength="6"'} autocomplete="new-password"></label>
       <label class="f"><span>limite de aparelhos (vazio = sem limite)</span><input class="input" name="max_devices" type="number" min="0" value="${p?.max_devices ?? ''}"></label>
-      <label class="f"><span>créditos (1 crédito = 30 dias de 1 aparelho · vazio = sem limite)</span><input class="input" name="credits" type="number" min="0" value="${p?.credits ?? ''}">
+      <label class="f"><span>créditos (1 crédito = 30 dias de 1 aparelho · vazio = sem limite)</span><input class="input" name="credits" type="number" min="0" value="${p ? (p.credits ?? '') : 0}">
         <span style="display:flex;gap:4px;margin-top:8px">${[10,30,50,100].map(n => `<button type="button" class="btn sm" data-cadd="${n}">+${n}</button>`).join('')}</span></label>
       <div class="foot">
         ${p ? '<button type="button" class="btn danger" id="mDel" style="margin-right:auto">apagar</button>' : ''}
